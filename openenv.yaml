@@ -1,0 +1,52 @@
+# OpenEnv Configuration File
+# Spec: https://github.com/OpenEnv/spec
+
+name: "GovWorkflow Optimization"
+version: "1.0.0"
+description: "A high-fidelity simulation of a government district office processing citizen applications with complex SLA, urgency, and fairness constraints."
+author: "OpenEnv RL Team"
+
+env:
+  class: "app.env.GovWorkflowEnv"
+  max_steps: 100
+  tasks:
+    - id: "district_backlog_easy"
+      description: "Basic backlog clearance with few services and low arrival rates."
+    - id: "mixed_urgency_medium"
+      description: "Moderate complexity with multiple services and varying citizen urgency levels."
+    - id: "cross_department_hard"
+      description: "High-pressure scenario with resource contention, document blocks, and strict fairness metrics."
+
+observation_space:
+  type: "dict"
+  description: "Real-time snapshot of the district office state."
+  fields:
+    - name: "day"
+      type: "int"
+    - name: "total_backlog"
+      type: "int"
+    - name: "queue_snapshots"
+      type: "list[dict]"
+    - name: "officer_pool"
+      type: "dict"
+    - name: "fairness_gap"
+      type: "float"
+
+action_space:
+  type: "discrete"
+  description: "Strategic interventions including resource reallocation and process control."
+  types:
+    - "set_priority_mode"
+    - "assign_capacity"
+    - "request_missing_documents"
+    - "escalate_service"
+    - "reallocate_officers"
+    - "advance_time"
+
+reward:
+  formula: "Weighted sum of progress, completions, and penalties (SLA, idleness, unfairness, invalid actions)."
+  range: [-10.0, 10.0]
+
+graders:
+  type: "weighted_metric"
+  range: [0.0, 1.0]

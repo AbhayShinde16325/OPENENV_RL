@@ -34,6 +34,9 @@ from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 from pydantic import BaseModel, Field
 
 from app.config import env_settings, server_settings
@@ -224,11 +227,25 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=server_settings.cors_origins,  # ["*"] — required for HF Spaces
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- Static File Serving for Frontend ---
+# This allows the same server to host both the API and the React UI
+static_path = "static"
+if os.path.exists(static_path):
+    app.mount("/assets", StaticFiles(directory=f"{static_path}/assets"), name="assets")
+
+    @app.get("/")
+    @app.get("/timeline")
+    @app.get("/actions")
+    @app.get("/reports")
+    @app.get("/sessions")
+    async def serve_spa():
+        return FileResponse(f"{static_path}/index.html")
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────

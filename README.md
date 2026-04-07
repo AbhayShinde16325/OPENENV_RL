@@ -1,6 +1,8 @@
 # OPENENV_RL: Gov Workflow Optimization
 
-OPENENV_RL is a high-fidelity reinforcement learning (RL) simulation environment designed to model and optimize government district office workflows. It features a sophisticated LLM-driven agent system with a 10-model fallback sequence for maximum resilience and production stability.
+OPENENV_RL is a high-fidelity reinforcement learning (RL) simulation environment designed to model and optimize government district office workflows. It is fully compliant with the **OpenEnv v1.0 Spec**.
+
+![OpenEnv Compliant](https://img.shields.io/badge/OpenEnv-Compliant-emerald)
 
 ---
 
@@ -99,6 +101,31 @@ uvicorn app.main:app --host 0.0.0.0 --port 7860 --reload
 ```powershell
 python baseline_openai.py --mode http --url http://localhost:7860 --agent llm --task district_backlog_easy
 ```
+
+---
+
+## 🧠 Environment Specification
+
+### Observation Space (Box/Dict)
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `day` | `int` | Current simulation day (0-100) |
+| `total_backlog` | `int` | Total pending applications across all services |
+| `queue_snapshots` | `list` | Detailed state per service (stage counts, age, urgency) |
+| `officer_pool` | `dict` | Current allocation of officers and reserve count |
+| `fairness_gap` | `float` | Max completion rate - Min completion rate |
+
+### Action Space (Discrete)
+The agent selects one action per step:
+1.  `advance_time`: The only action that processes applications (Day + 1).
+2.  `set_priority_mode`: Change processing logic (e.g., `urgent_first`).
+3.  `assign_capacity`: Deploy reserve officers to a specific service.
+4.  `request_missing_documents`: Unblock applications stuck in verification.
+5.  `escalate_service`: Use budget to bypass stages for urgent cases.
+6.  `reallocate_officers`: Move staff between services to balance load.
+
+### Reward Function
+$R = 0.7 \cdot Advances + 4.0 \cdot Completions - 0.04 \cdot Backlog - 1.5 \cdot Breaches - 2.0 \cdot Unfairness$
 
 ---
 
